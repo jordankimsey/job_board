@@ -1,91 +1,75 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from './page.module.css'
-
-const inter = Inter({ subsets: ['latin'] })
+'use client';
+import { useState } from 'react';
+import JobPost, { JobPostType } from './JobPost';
+import styles from './page.module.css';
 
 export default function Home() {
+  const loadMoreCount = 6;
+  const [next, setNext] = useState(9);
+
+  const handleMore = () => {
+    console.log('fetching more', next + loadMoreCount);
+    setNext(next + loadMoreCount);
+  };
+
+  const getCompanyNameFromDescription = (description: string) => {
+    const companyName = description.split('Is Hiring');
+    console.log(companyName);
+    if (!companyName[1]) {
+      const companyName2 = description.split('Is Looking');
+      return companyName2[0];
+    } else {
+      return companyName[0];
+    }
+  };
+
+  const samplePosts = [
+    {
+      company: 'AcmeCo',
+      description: 'Motion (YC W20) Is Hiring junior Frontend engineers',
+      date: '1/20/2022',
+      id: '1',
+      url: 'www.google.com',
+    },
+    {
+      company: 'AcmeCo',
+      description: 'Is Hiring junior Frontend engineers',
+      date: '1/20/2022',
+      id: '1',
+      url: 'www.google.com',
+    },
+    {
+      company: 'AcmeCo',
+      description: 'AcmeCo (WC20) Is Looking for junior Frontend engineers',
+      date: '1/20/2022',
+      id: '1',
+      url: 'www.google.com',
+    },
+  ];
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <div className='w-full text-center'>
+        <h1 className='text-4xl font-bold italic pb-5'>HN Jobs</h1>
+        <h4>{getCompanyNameFromDescription(samplePosts[2].description)}</h4>
+        <div className='grid grid-cols-3 gap-4'>
+          {samplePosts.length > 0 ? (
+            samplePosts.map((post, index) => (
+              <JobPost post={post} key={index} />
+            ))
+          ) : (
+            <h1>No post found</h1>
+          )}
+        </div>
+        <div className='mt-5'>
+          <button
+            onClick={handleMore}
+            className='border py-2 px-4 border-black '
           >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            Load more
+          </button>
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
       </div>
     </main>
-  )
+  );
 }
