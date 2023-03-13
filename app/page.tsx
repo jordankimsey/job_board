@@ -1,62 +1,76 @@
 'use client';
-import { useState } from 'react';
-import JobPost, { JobPostType } from './JobPost';
+import { useState, useEffect } from 'react';
+import JobPost from './JobPost';
 import styles from './page.module.css';
+
+export interface JobPostType {
+  by: string;
+  id: number;
+  score: number;
+  time: number;
+  title: string;
+  type: string;
+  url?: string;
+  text?: string;
+}
 
 export default function Home() {
   const loadMoreCount = 6;
   const [next, setNext] = useState(9);
+  const [sliceFrom, setSliceFrom] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [jobPosts, setJobPosts] = useState<JobPostType[]>([]);
+
+  const fetchJobPosts = async () => {
+    const jobPostIds = await fetch(
+      'https://hacker-news.firebaseio.com/v0/jobstories.json'
+    );
+    const data: string[] = await jobPostIds.json();
+    return data;
+  };
+
+  const fetchJobData = async () => {
+    setLoading(true);
+    const postIds = await fetchJobPosts();
+    await Promise.all(
+      postIds.slice(sliceFrom, next).map(async (id) => {
+        const res = await fetch(
+          `https://hacker-news.firebaseio.com/v0/item/${id}.json`
+        );
+        const data = await res.json();
+        return data;
+      })
+    )
+      .then((result: JobPostType[]) => {
+        setJobPosts(prev => [...prev, ...result]);
+      })
+      .then(() => setLoading(false))
+      .then(() => {
+        setSliceFrom(next);
+        setNext(next + loadMoreCount);
+      })
+      .catch((err) => console.log(err));
+  };
+
+  useEffect(() => {
+    fetchJobData()
+  }, []);
 
   const handleMore = () => {
-    console.log('fetching more', next + loadMoreCount);
-    setNext(next + loadMoreCount);
+      fetchJobData()
   };
-
-  const getCompanyNameFromDescription = (description: string) => {
-    const companyName = description.split('Is Hiring');
-    console.log(companyName);
-    if (!companyName[1]) {
-      const companyName2 = description.split('Is Looking');
-      return companyName2[0];
-    } else {
-      return companyName[0];
-    }
-  };
-
-  const samplePosts = [
-    {
-      company: 'AcmeCo',
-      description: 'Motion (YC W20) Is Hiring junior Frontend engineers',
-      date: '1/20/2022',
-      id: '1',
-      url: 'www.google.com',
-    },
-    {
-      company: 'AcmeCo',
-      description: 'Is Hiring junior Frontend engineers',
-      date: '1/20/2022',
-      id: '1',
-      url: 'www.google.com',
-    },
-    {
-      company: 'AcmeCo',
-      description: 'AcmeCo (WC20) Is Looking for junior Frontend engineers',
-      date: '1/20/2022',
-      id: '1',
-      url: 'www.google.com',
-    },
-  ];
 
   return (
     <main className={styles.main}>
       <div className='w-full text-center'>
         <h1 className='text-4xl font-bold italic pb-5'>HN Jobs</h1>
-        <h4>{getCompanyNameFromDescription(samplePosts[2].description)}</h4>
         <div className='grid grid-cols-3 gap-4'>
-          {samplePosts.length > 0 ? (
-            samplePosts.map((post, index) => (
-              <JobPost post={post} key={index} />
-            ))
+          {loading ? (
+            <div>Loading...</div>
+          ) : jobPosts.length > 0 ? (
+            jobPosts
+              .slice(0, next)
+              .map((post, index) => <JobPost post={post} key={index} />)
           ) : (
             <h1>No post found</h1>
           )}
