@@ -43,7 +43,7 @@ const JobPost = ({ post }: { post: JobPostType }) => {
         {post.title && getCompanyNameFromDescription(post.title, true)}
       </h3>
       <h5 className='font-bold'>
-        {post.title && getCompanyNameFromDescription(post.title, false)}
+        {post.title}
       </h5>
       <p>{dateTime}</p>
     </div>

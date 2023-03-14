@@ -20,6 +20,7 @@ export default function Home() {
   const [sliceFrom, setSliceFrom] = useState(0);
   const [loading, setLoading] = useState(false);
   const [jobPosts, setJobPosts] = useState<JobPostType[]>([]);
+  const [postIds, setPostIds] = useState<string[]>([]);
 
   const fetchJobPosts = async () => {
     const jobPostIds = await fetch(
@@ -29,9 +30,9 @@ export default function Home() {
     return data;
   };
 
-  const fetchJobData = async () => {
+  const fetchJobData = async (postIds: string[]) => {
     setLoading(true);
-    const postIds = await fetchJobPosts();
+
     await Promise.all(
       postIds.slice(sliceFrom, next).map(async (id) => {
         const res = await fetch(
@@ -42,7 +43,7 @@ export default function Home() {
       })
     )
       .then((result: JobPostType[]) => {
-        setJobPosts(prev => [...prev, ...result]);
+        setJobPosts((prev) => [...prev, ...result]);
       })
       .then(() => setLoading(false))
       .then(() => {
@@ -53,11 +54,14 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchJobData()
+      fetchJobPosts().then((result) => {
+        setPostIds(result)
+        fetchJobData(result)
+      })
   }, []);
 
   const handleMore = () => {
-      fetchJobData()
+    fetchJobData(postIds);
   };
 
   return (
